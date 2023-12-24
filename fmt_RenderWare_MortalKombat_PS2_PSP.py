@@ -906,7 +906,7 @@ class rGeometryList(object):
 
 
 class rSkin(object):
-    def __init__(self,datas,numVert,nativeFlag,version,matList):
+    def __init__(self,datas,numVert,nativeFlag,version):
         self.bs = NoeBitStream(datas)
         self.numVert = numVert
         self.nativeFlag = nativeFlag
@@ -915,7 +915,6 @@ class rSkin(object):
         self.usedBoneIndexList = []
         self.version = version
         self.pspBonePalettes = []
-        self.matList = matList
         self.maxNumWeights = 0
     def readSkin(self):
         if self.nativeFlag == 0:
@@ -2110,7 +2109,7 @@ class rGeomtry(object):
             else:
                 self.bs.seek(header.chunkSize,1)
         if haveSkin:
-            skin = rSkin(skinDatas,numVert,nativeFlags,geoStruct.version,rMatList)
+            skin = rSkin(skinDatas,numVert,nativeFlags,geoStruct.version)
             skin.readSkin()
         if haveBinMesh:
             binMeshPLG = rBinMeshPLG(binMeshDatas,matList,nativeFlags)
@@ -2188,7 +2187,7 @@ class rGeomtry(object):
                 if MKSkinFlag:
                     skinDataSize = geoStruct.chunkSize - 40 - nativeChunkSize
                     skinDatas = self.bs.readBytes(skinDataSize)
-                    skin = rSkin(skinDatas,numVert,nativeFlags,geoStruct.version,rMatList)
+                    skin = rSkin(skinDatas,numVert,nativeFlags,geoStruct.version)
                     skin.readSkin()
                     skinPlgBoneMap = skin.usedBoneIndexList
                 skinPlgEndOffset = self.bs.tell()
@@ -2212,7 +2211,7 @@ class rGeomtry(object):
                     skinHeader = rwChunk(self.bs)
                     self.bs.seek(-12,NOESEEK_REL)
                     skinDatas = self.bs.readBytes(skinHeader.chunkSize + 12)
-                    skin = rSkin(skinDatas,numVert,nativeFlags,geoStruct.version,matList)
+                    skin = rSkin(skinDatas,numVert,nativeFlags,geoStruct.version)
                     skin.readSkin()
                     baseOffset2 = self.bs.tell()
                 else:
