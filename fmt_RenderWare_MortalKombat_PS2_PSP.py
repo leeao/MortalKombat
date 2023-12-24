@@ -903,6 +903,8 @@ class rGeometryList(object):
             geo.rGeometryStruct()
             for m in range(len(geo.matList)):
                 self.matList.append(geo.matList[m])
+
+
 class rSkin(object):
     def __init__(self,datas,numVert,nativeFlag,version,matList):
         self.bs = NoeBitStream(datas)
@@ -914,50 +916,46 @@ class rSkin(object):
         self.version = version
         self.pspBonePalettes = []
         self.matList = matList
-    def getMeshType0BonePalette(self):
-        for i in range(len(self.matList.MKMaterialList)):
-            if self.matList.MKMaterialList[i].unk2 == 11:
-                self.usedBoneIndexList = self.matList.MKMaterialList[i].MKMaterialSkinBonePalette
-
+        self.maxNumWeights = 0
     def readSkin(self):
         if self.nativeFlag == 0:
             boneCount = self.bs.readByte()
             usedBoneIDCount=self.bs.readByte()
-            maxNumWeights = self.bs.readByte()
+            self.maxNumWeights = self.bs.readByte()
             unk2 = self.bs.readByte()
             self.bs.seek(usedBoneIDCount,1)
+
             self.boneIndexs = self.bs.readBytes(self.numVert*4)
             self.boneWeights= self.bs.readBytes(self.numVert*16)
             inverseBoneMats=[]
             self.usedBoneIndexList=[]
             for i in range(boneCount):
-                if self.version < 0x34000 and maxNumWeights == 0:
+                if self.version < 0x34000 and self.maxNumWeights == 0:
                     flag = self.bs.readInt()
                     self.usedBoneIndexList.append(flag >> 24)
                 inverseBoneMats.append(NoeMat44.fromBytes(self.bs.readBytes(64)))
-            if self.matList.MKMaterialList[0].meshTypeFlag == 0:
-                self.getMeshType0BonePalette()
+            '''
             newBids = bytes()
             for w in range(self.numVert):
                 weights = noeUnpack('4f',self.boneWeights[w*16:w*16+16] )
                 b1,b2,b3,b4=(0,0,0,0)
                 if weights[0] > 0:
                     b1 = noeUnpack('B',self.boneIndexs[w*4:w*4+1])[0]
-                    b1 = self.usedBoneIndexList[b1]
+                    # b1 = self.usedBoneIndexList[b1]
                 if weights[1] > 0:
                     b2 = noeUnpack('B',self.boneIndexs[w*4+1:w*4+2])[0]
-                    b2 = self.usedBoneIndexList[b2]
+                    # b2 = self.usedBoneIndexList[b2]
                 if weights[2] > 0:
                     b3 = noeUnpack('B',self.boneIndexs[w*4+2:w*4+3])[0]
-                    b3 = self.usedBoneIndexList[b3]
+                    # b3 = self.usedBoneIndexList[b3]
                 if weights[3] > 0:
                     b4 = noeUnpack('B',self.boneIndexs[w*4+3:w*4+4])[0]
-                    b4 = self.usedBoneIndexList[b4]
+                    # b4 = self.usedBoneIndexList[b4]
                 newBids += noePack("4B",b1,b2,b3,b4)
             rapi.rpgBindBoneIndexBuffer(newBids, noesis.RPGEODATA_UBYTE, 4 , 4)
             #rapi.rpgBindBoneIndexBuffer(self.boneIndexs, noesis.RPGEODATA_UBYTE, 4 , 4)
             rapi.rpgBindBoneWeightBuffer(self.boneWeights, noesis.RPGEODATA_FLOAT, 16, 4)
-
+            '''
             #if not isMKPS2:
             #    self.bs.read('3f')
 
@@ -1018,20 +1016,32 @@ class rBinMeshPLG(object):
         self.nativeFlag = nativeFlag
         self.matIdList = []
         self.matIdNumFaceList = []
+        self.indicesMatIDs = []
+        self.faceIndices = []
+        self.faceStrips = []
+        self.numSplitMatID = 0
+        self.faceType = 0
+        self.indicesCount = 0
     def readFace(self):
-        faceType = self.bs.readInt() # 1 = triangle strip
-        numSplitMatID = self.bs.readUInt()
-        indicesCount = self.bs.readUInt()
-        for i in range(numSplitMatID):
-            faceIndices = self.bs.readUInt()
+        self.faceType = self.bs.readInt() # 1 = triangle strip
+        self.numSplitMatID = self.bs.readUInt()
+        self.indicesCount = self.bs.readUInt()
+        for i in range(self.numSplitMatID):
+            numFaceIndices = self.bs.readUInt()
             matID = self.bs.readUInt()
             self.matIdList.append(matID)
-            self.matIdNumFaceList.append(faceIndices)
+            self.matIdNumFaceList.append(numFaceIndices)
             if self.nativeFlag != 1:
-                matName = self.matList[matID].name
-                rapi.rpgSetMaterial(matName)
-                tristrips = self.bs.readBytes(faceIndices*4)
-                rapi.rpgCommitTriangles(tristrips, noesis.RPGEODATA_UINT, faceIndices, noesis.RPGEO_TRIANGLE_STRIP, 1)
+                # matName = self.matList[matID].name
+                # rapi.rpgSetMaterial(matName)
+                tristrips = self.bs.readBytes(numFaceIndices*4)
+                self.faceStrips.append(tristrips)
+                # rapi.rpgCommitTriangles(tristrips, noesis.RPGEODATA_UINT, numFaceIndices, noesis.RPGEO_TRIANGLE_STRIP, 1)
+                indices = struct.unpack(numFaceIndices * "I", tristrips)
+                for vertID in indices:
+                    self.indicesMatIDs.append(matID)
+                    self.faceIndices.append(vertID)
+
 class materialTristripsInfo(object):
     def __init__(self,vertexCountStart,vertexCountEnd,tristripsCount,unknownCount):
         self.vertexCountStart = vertexCountStart
@@ -2105,6 +2115,64 @@ class rGeomtry(object):
         if haveBinMesh:
             binMeshPLG = rBinMeshPLG(binMeshDatas,matList,nativeFlags)
             binMeshPLG.readFace()
+        if haveSkin and nativeFlags == 0:
+            # MKDA PS2
+            if geoStruct.version < 0x34000 and skin.maxNumWeights == 0:
+                newBids = bytes()
+                for w in range(numVert):
+                    weights = struct.unpack('4f',skin.boneWeights[w*16:w*16+16] )
+                    b1,b2,b3,b4=(0,0,0,0)
+                    if weights[0] > 0:
+                        b1 = struct.unpack('B',skin.boneIndexs[w*4:w*4+1])[0]
+                        b1 = skin.usedBoneIndexList[b1]
+                    if weights[1] > 0:
+                        b2 = struct.unpack('B',skin.boneIndexs[w*4+1:w*4+2])[0]
+                        b2 = skin.usedBoneIndexList[b2]
+                    if weights[2] > 0:
+                        b3 = struct.unpack('B',skin.boneIndexs[w*4+2:w*4+3])[0]
+                        b3 = skin.usedBoneIndexList[b3]
+                    if weights[3] > 0:
+                        b4 = struct.unpack('B',skin.boneIndexs[w*4+3:w*4+4])[0]
+                        b4 = skin.usedBoneIndexList[b4]
+                    newBids += noePack("4B",b1,b2,b3,b4)
+                rapi.rpgBindBoneIndexBuffer(newBids, noesis.RPGEODATA_UBYTE, 4 , 4)
+                rapi.rpgBindBoneWeightBuffer(skin.boneWeights, noesis.RPGEODATA_FLOAT, 16, 4)
+            # MKA Morph targets
+            elif haveBinMesh and rMatList.useBonePalette:
+                vertMatIDs = [0] * numVert
+                for vertID,matID in zip(binMeshPLG.faceIndices,binMeshPLG.indicesMatIDs):
+                    vertMatIDs[vertID] = matID
+                # print(vertMatIDs)
+                newBids = bytes()
+                for w in range(numVert):
+                    weights = struct.unpack('4f',skin.boneWeights[w*16:w*16+16] )
+                    matID = vertMatIDs[w]
+                    b1,b2,b3,b4=(0,0,0,0)
+                    if weights[0] > 0:
+                        b1 = struct.unpack('B',skin.boneIndexs[w*4:w*4+1])[0]
+                        b1 = rMatList.MKMaterialSkinBonePalette[matID][b1]
+                    if weights[1] > 0:
+                        b2 = struct.unpack('B',skin.boneIndexs[w*4+1:w*4+2])[0]
+                        b2 = rMatList.MKMaterialSkinBonePalette[matID][b2]
+                    if weights[2] > 0:
+                        b3 = struct.unpack('B',skin.boneIndexs[w*4+2:w*4+3])[0]
+                        b3 = rMatList.MKMaterialSkinBonePalette[matID][b3]
+                    if weights[3] > 0:
+                        b4 = struct.unpack('B',skin.boneIndexs[w*4+3:w*4+4])[0]
+                        b4 = rMatList.MKMaterialSkinBonePalette[matID][b4]
+                    newBids += noePack("4B",b1,b2,b3,b4)
+                rapi.rpgBindBoneIndexBuffer(newBids, noesis.RPGEODATA_UBYTE, 4 , 4)
+                rapi.rpgBindBoneWeightBuffer(skin.boneWeights, noesis.RPGEODATA_FLOAT, 16, 4)
+        if haveBinMesh and nativeFlags == 0:
+            for i in range(binMeshPLG.numSplitMatID):
+                matID = binMeshPLG.matIdList[i]
+                numFaceIndices = binMeshPLG.matIdNumFaceList[i]
+                tristrips = binMeshPLG.faceStrips[i]
+                matName = self.matList[matID].name
+                if binMeshPLG.faceType == 1:
+                    rapi.rpgSetMaterial(matName)
+                    rapi.rpgCommitTriangles(tristrips, noesis.RPGEODATA_UINT, \
+                                            numFaceIndices, noesis.RPGEO_TRIANGLE_STRIP, 1)
         if nativeFlags == 1 and geoStruct.chunkSize > 40:
             if isMKPS2:
                 splitCount = len(binMeshPLG.matIdList)
