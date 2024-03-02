@@ -95,10 +95,18 @@ def readRWString(bs):
 
 def get_ext_file(dir_path,extension):
     file_list = []
+    for filename in os.listdir(dir_path):
+        if filename.endswith(extension):
+            full_name = os.path.join(dir_path, filename)
+            file_list.append(full_name)
+    '''
+    # Get all specified files in subdirectories 
     for root, dirs, files in os.walk(dir_path):
         for file in files:
             if file.endswith(extension): # ext "mka"
+                print(os.path.join(root, file))
                 file_list.append(os.path.join(root, file))
+    '''
     return file_list
 
 # Create kf Bone
@@ -184,7 +192,7 @@ def LoadAnims(data, animName, bones,hAnimBoneIDList,hSkinBoneIDList):
                     qz = (0.00048828125 * ((((RotCompressed2 & 0xFFF00) >> 8) ^ 0x800) - 2048)) #* -1.0
                     qw = 0.00048828125 * ((RotCompressed2 & 0xFFF00000) >> 20)
                     #conjugate -qx -qy -qz qw
-                    quat = NoeQuat([-qx,-qy,-qz,qw]) 
+                    quat = NoeQuat([-qx,-qy,-qz,qw])
                     #quat = NoeQuat([qx,qy,qz,qw])
                     #quat = quat.transpose()
                     #quat = NoeQuat([qx,qy,qz,qw]).transpose()
@@ -222,7 +230,7 @@ class rClump(object):
         self.mdlList = []
     def readClump(self):
         rapi.rpgReset()
-        clumpStructHeader = rClumpStruct(self.bs)            
+        clumpStructHeader = rClumpStruct(self.bs)
         frameListHeader = rwChunk(self.bs)
 
         datas = self.bs.readBytes(frameListHeader.chunkSize)
@@ -291,7 +299,6 @@ class rClump(object):
                 matList.append(material)
             mdl.setModelMaterials(NoeModelMaterials(texList,matList))
             mdl.setBones(skinBones)
-
             anims = []
             if LoadMKAnimation:
                 path = os.path.dirname(rapi.getInputName())
@@ -299,7 +306,7 @@ class rClump(object):
                 for mkaFile in mkaFiles:
                     mkaName = os.path.basename(mkaFile)[:-4] # Filename without extension
                     animData = rapi.loadIntoByteArray(mkaFile)
-                    if animData:                        
+                    if animData:
                         anims.append(LoadAnims(animData, mkaName, \
                         skinBones,frameList.hAnimBoneIDList,frameList.hSkinBoneIDList))
                 if anims:
@@ -334,74 +341,48 @@ GlobalBoneNames = {
     '4099': "Bip01_Spine",
     '4102': "Bip01_Spine1",
     '4105': "Bip01_Spine2",
+
     '4110': "Bip01_R_Clavicle",
     '4113': "Bip01_R_UpperArm",
     '4115': "Bip01_R_UpperArm2",
     '4117': "Bip01_R_Forearm",
     '4119': "Bip01_R_Forearm2",
     '4121': "Bip01_R_Hand",
-    '4123': "Bip01_R_Finger0",
-    '4133': "Bip01_R_Finger01",
-
-    '4127': "Bip01_R_Finger2",
-    '4137': "Bip01_R_Finger21",
-    '4129': "Bip01_R_Finger3",
-    '4139': "Bip01_R_Finger31",
-
     '4131': "Bip01_R_Finger1",
     '4141': "Bip01_R_Finger11",
     '4151': "Bip01_R_Finger111",
-    '4109': "Bip01_Neck",
-    '4112': "Bip01_Head",
+    '4127': "Bip01_R_Finger2",
+    '4137': "Bip01_R_Finger22",
+    '4123': "Bip01_R_Finger3",
+    '4133': "Bip01_R_Finger33",
+    '4125': "Bip01_R_Finger4",
+    '4135': "Bip01_R_Finger44",
+    '4129': "Bip01_R_Finger5",
+    '4139': "Bip01_R_Finger55",
+
     '4108': "Bip01_L_Clavicle",
     '4111': "Bip01_L_UpperArm",
     '4114': "Bip01_L_UpperArm2",
     '4116': "Bip01_L_Forearm",
     '4118': "Bip01_L_Forearm2",
     '4120': "Bip01_L_Hand",
-    '4122': "Bip01_L_Finger0",
-    '4132': "Bip01_L_Finger01",
-
-    '4126': "Bip01_L_Finger2",
-    '4136': "Bip01_L_Finger21",
-    '4128': "Bip01_L_Finger3",
-    '4138': "Bip01_L_Finger31",
-
     '4130': "Bip01_L_Finger1",
     '4140': "Bip01_L_Finger11",
-    '4150': "Bip01_L_Finger111",
+    '4150': "Bip01_L_Finger111",    
+    '4126': "Bip01_L_Finger2",
+    '4136': "Bip01_L_Finger22",    
+    '4122': "Bip01_L_Finger3",
+    '4132': "Bip01_L_Finger33",
+    '4124': "Bip01_L_Finger4",
+    '4134': "Bip01_L_Finger44",
+    '4128': "Bip01_L_Finger5",
+    '4138': "Bip01_L_Finger55",
+ 
+    '4109': "Bip01_Neck",
+    '4112': "Bip01_Head",
 
-    '36864': "Bip01_copy",
-    '36865': "Bip01_L_Thigh_copy",
-    '36866': "Bip01_R_Thigh_copy",
-    '36869': "Bip01_R_Calf_copy",
-    '36872': "Bip01_R_Foot_copy",
-    '36875': "Bip01_R_Toe0_copy",
-    '36868': "Bip01_L_Calf_copy",
-    '36871': "Bip01_L_Foot_copy",
-    '36874': "Bip01_L_Toe0_copy",
-    '36867': "Bip01_Spine_copy",
-    '36870': "Bip01_Spine1_copy",
-    '36873': "Bip01_Spine2_copy",
-    '36878': "Bip01_R_Clavicle_copy",
-    '36877': "Bip01_Neck_copy",
-    '36880': "Bip01_Head_copy",
-    '36876': "Bip01_L_Clavicle_copy",
-    '36881': "Bip01_R_UpperArm_copy",
-    '36883': "Bip01_R_UpperArm2_copy",
-    '36885': "Bip01_R_Forearm_copy",
-    '36887': "Bip01_R_Forearm2_copy",
-    '36889': "Bip01_R_Hand_copy",
-    '36891': "Bip01_R_Finger0_copy",
-    '36899': "Bip01_R_Finger1_copy",
-    '36879': "Bip01_L_UpperArm_copy",
-    '36882': "Bip01_L_UpperArm2_copy",
-    '36884': "Bip01_L_Forearm_copy",
-    '36886': "Bip01_L_Forearm2_copy",
-    '36888': "Bip01_L_Hand_copy",
-    '36890': "Bip01_L_Finger0_copy",
-    '36898': "Bip01_L_Finger1_copy",
 }
+
 
 class rFrameList(object):
     def __init__(self,datas):
@@ -933,28 +914,6 @@ class rSkin(object):
                     flag = self.bs.readInt()
                     self.usedBoneIndexList.append(flag >> 24)
                 inverseBoneMats.append(NoeMat44.fromBytes(self.bs.readBytes(64)))
-            '''
-            newBids = bytes()
-            for w in range(self.numVert):
-                weights = noeUnpack('4f',self.boneWeights[w*16:w*16+16] )
-                b1,b2,b3,b4=(0,0,0,0)
-                if weights[0] > 0:
-                    b1 = noeUnpack('B',self.boneIndexs[w*4:w*4+1])[0]
-                    # b1 = self.usedBoneIndexList[b1]
-                if weights[1] > 0:
-                    b2 = noeUnpack('B',self.boneIndexs[w*4+1:w*4+2])[0]
-                    # b2 = self.usedBoneIndexList[b2]
-                if weights[2] > 0:
-                    b3 = noeUnpack('B',self.boneIndexs[w*4+2:w*4+3])[0]
-                    # b3 = self.usedBoneIndexList[b3]
-                if weights[3] > 0:
-                    b4 = noeUnpack('B',self.boneIndexs[w*4+3:w*4+4])[0]
-                    # b4 = self.usedBoneIndexList[b4]
-                newBids += noePack("4B",b1,b2,b3,b4)
-            rapi.rpgBindBoneIndexBuffer(newBids, noesis.RPGEODATA_UBYTE, 4 , 4)
-            #rapi.rpgBindBoneIndexBuffer(self.boneIndexs, noesis.RPGEODATA_UBYTE, 4 , 4)
-            rapi.rpgBindBoneWeightBuffer(self.boneWeights, noesis.RPGEODATA_FLOAT, 16, 4)
-            '''
             #if not isMKPS2:
             #    self.bs.read('3f')
 
@@ -1088,7 +1047,7 @@ class rMKPS2NativeDataPLG(object):
             prevStripIDList = []
             vertIDList1Array = []
             vertIDList2Array = []
-            sharedVertexIDList = []   
+            sharedVertexIDList = []
             MKPS2SkinDatas = []
 
 
@@ -1098,22 +1057,22 @@ class rMKPS2NativeDataPLG(object):
             # MKA 单骨头武器模型带SKIN PLG模型，但没有权重0x71区块。MK材质里没有骨头调色板列表，标志0x00000005。
             # MKD 单骨头武器模型带SKIN PLG模型，但有权重0x71区块。MK材质有骨头调色板列表，标志0x60000005。
 
-            # Mesh Type 128 Player COSTUME / Weapon skined model. 0x6000 flag. 
+            # Mesh Type 128 Player COSTUME / Weapon skined model. 0x6000 flag.
             # MKMaterial has bone palette, has 0x71 weights chunk.
             if self.MKMaterialList[self.matIdList[i]].meshTypeFlag == 128:
                 count0x71 = 4
                 self.skinFlag = True
                 BonePalette = self.MKMaterialSkinBonePalette[self.matIdList[i]]
 
-            # Mesh Type 129 Weapon skined model. 
-            # 0xE000 & 0x8000 special data flag. 
-            # MKMaterial has bone palette, has 0x71 weights chunk.                
+            # Mesh Type 129 Weapon skined model.
+            # 0xE000 & 0x8000 special data flag.
+            # MKMaterial has bone palette, has 0x71 weights chunk.
             elif self.MKMaterialList[self.matIdList[i]].meshTypeFlag == 129:
                 count0x71 = 4
                 self.skinFlag = True
                 BonePalette = self.MKMaterialSkinBonePalette[self.matIdList[i]]
 
-            # Mesh Type 130 Player Reflect / WEAPON_RF No UV skined model. 
+            # Mesh Type 130 Player Reflect / WEAPON_RF No UV skined model.
             # MKMaterial has bone palette, has 0x6E single weight chunk.
             # no 0x71 index/weights chunk.
             elif self.MKMaterialList[self.matIdList[i]].meshTypeFlag == 130:
@@ -1140,38 +1099,36 @@ class rMKPS2NativeDataPLG(object):
             # Mesh Type 128, 129 Player COSTUME / Weapon skined model.
             # Has UV Player SkinedModel , need reorder vertex list and copy new vertex to new list.
             # Bonemap in MKMaterial bones list(id is haim list id).
-            # BoneID1 = vx & 0xff / 4 - 1
-            # BoneID2 = vy & 0xff / 4 - 1
-            # BoneID3 = vz & 0xff / 4 - 1
+            # BoneID1 = vx & 0x3ff / 4 - 1
+            # BoneID2 = vy & 0x3ff / 4 - 1
+            # BoneID3 = vz & 0x3ff / 4 - 1
             # 0x68 - vertex
             # 0x6A - normal
             # 0x65 - uv
             # 0x6E - 8bytes. vertex info section. byte4 = real numVert.
             # 0x6D - Vertex shared list (the vertex ID of the previous strip to the next strip). The first triangle strip does not contain this data.
             # 0x6D - if current strip missing some vertex id then will have this section.
-            # 0x71 chunk 1 = vertList 1 USHORT value; unkFlag = value & 0x2; vertID = value & 0x7FFC. skipFlag = value & 0x8000
-            # 0x71 chunk 4 = vertList 2
-            # 0x71 chunk 2 = skin/vertex weights chunk, UBYTE weight1/255; UBYTE weight1 & 0xf; if weight1 and weight 2 == 0 , is only boneid1 used. weight = 1.0;
-            # 0x72 chunk 3 = skin/vertex weights chunk, UBYTE weight2/255; UBYTE weight2 & 0xf;
-            
-            # 0x71 boneID is HAnimListID real bone id = HAimSkinIDList[HAnimListID].skinBoneID
-            # 0x71 weight 16 + 0 is 1.0 weight. 8+8 is 0.5 + 0.5 12+4 = 12/1 + 4/16
-            # 0x71 weight A + B = 15. 2 weights. weight /= 255.0. wa+wb=255.
-            # 0x71 weight A + b < 15. 3 weights.
+            # 0x71 chunk 1 = vertex index list 1 USHORT index; skip flag = index & 0x8000
+            # 0x71 chunk 4 = vertex index list 2
+            # 0x71 chunk 2 = skin vertex weights chunk
+            # 0x72 chunk 3 = skin vertex weights chunk
 
-            # Mesh Type 131 NPC / Player DECOY skined model. 
-            # Has UV NPC SkinedModel 
+            # 0x71 boneID is HAnimListID real bone id = HAimSkinIDList[HAnimListID].skinBoneID
+
+
+            # Mesh Type 131 NPC / Player DECOY skined model.
+            # Has UV NPC SkinedModel
             # BonePalette in HAnimSkinBoneIDList (HAnim list id).
             # MKMaterial no bone palette.
             # 0x68 vertex, 0x6A normal, 0x65 uv, 0x6D vertex shared list.
             # 0x71 chunk x 4. same as Mesh Type 128.
 
-            # Mesh Type 130 Player REFLECT / WEAPON_RF no UV skined model. 
+            # Mesh Type 130 Player REFLECT / WEAPON_RF no UV skined model.
             # No UV SkinedModel
             # 0x68 Vertex float[3]
-            # 0x6A Normals byte[3]            
-            # 0x6E 4bytes. UBYTE1 boneid/4 - 1 ; UBYTE2 and UBYTE3 is zero; UBYTE4 skipFlag;
-            
+            # 0x6A Normals byte[3]
+            # 0x6E 4bytes. UBYTE1 boneid/4 - 1 ; UBYTE2 and UBYTE3 is zero; UBYTE4 skip flag;
+
             # Mesh Type 137 MKA Weapon / Stage model.
             # Has UV Non-SkinedModel MapMesh
             # 0x64 UV float[2]
@@ -1241,7 +1198,7 @@ class rMKPS2NativeDataPLG(object):
                         colorDatas.append(up.data)
                     elif len(up.data) == 4:
                         realNumVertsList.append(noeUnpack("B",up.data[3:4])[0])
-                        first4ByteStr = "%d,%d,%d,%d\n" %(up.data[0],up.data[1],up.data[2],up.data[3])
+                        #first4ByteStr = "%d,%d,%d,%d\n" %(up.data[0],up.data[1],up.data[2],up.data[3])
                         #print(first4ByteStr)
                 elif up.numElems == 4 and up.elemBits == 16:    #0x6D000000
                     if self.skinFlag:
@@ -1416,9 +1373,17 @@ class rMKPS2NativeDataPLG(object):
                     
                 vertBuffer = getTransformVertex(vertBuffer,self.vertMat)       
                 rapi.rpgBindPositionBuffer(vertBuffer, noesis.RPGEODATA_FLOAT, 12) 
-                numVert = len(vertBuffer) // 12 
-                #print("numVert:",numVert)               
+                numVert = len(vertBuffer) // 12
+                #print("numVert:",numVert)
+                tempVertices = []
+                for vi in range(numVert):
+                    vertex = struct.unpack("<3f",vertBuffer[vi * 12:vi * 12 + 12])
+                    tempVertices.append(vertex)
                 normalData = getTransformNormal(normalData,self.vertMat)
+                tempNormals = []
+                for vi in range(numVert):
+                    normal = struct.unpack("<3f",normalData[vi * 12:vi * 12 + 12])
+                    tempNormals.append(normal)                
                 rapi.rpgBindNormalBuffer(normalData, noesis.RPGEODATA_FLOAT, 12)
                 if len(UVDatas):
                     rapi.rpgBindUV1Buffer(UVData, noesis.RPGEODATA_FLOAT, 8)                      
@@ -1446,16 +1411,42 @@ class rMKPS2NativeDataPLG(object):
                 if len(faceDatas):
                     if numVert > 2 : 
                         #print("NO UV SKIN MESH")
-                        faceBuffer = faceDatas[v] 
+                        faceBuffer = faceDatas[v]
+                        #faceBuffer = fix_strip_face_normal(faceBuffer, tempVertices, tempNormals)
                         rapi.rpgCommitTriangles(faceBuffer, noesis.RPGEODATA_INT, len(faceBuffer)//4, noesis.RPGEO_TRIANGLE, 1)  
                 elif len(tempFaceDatas) > 0:
                     #print("UV SKIN MESH and Map MESH")
-                    faceBuffer = tempFaceDatas[0] 
+                    faceBuffer = tempFaceDatas[0]
+                    faceBuffer = fix_strip_face_normal(faceBuffer, tempVertices, tempNormals)
                     rapi.rpgCommitTriangles(faceBuffer, noesis.RPGEODATA_INT, len(faceBuffer)//4, noesis.RPGEO_TRIANGLE, 1)
                 elif len(vertIDList1Array) == 0: #NO vertex indices map mesh
                     faceBuffer = getTriangleList(vertBuffer,1)
                     rapi.rpgCommitTriangles(faceBuffer, noesis.RPGEODATA_INT, len(faceBuffer)//4, noesis.RPGEO_TRIANGLE, 1)
                 rapi.rpgClearBufferBinds()
+
+
+def fix_strip_face_normal(faceBuffer:bytes, tempVertices, tempNormals):
+
+    # https://github.com/aap/rwio/blob/4121d2f1da8946464f79363d67676f08bf7e293b/src/import.cpp#L575C4-L575C67
+    # See if we can figure out a better winding if we have normals
+
+    tempFace = []
+    tempFaceBuffer = bytes()
+    for f in range(len(faceBuffer) // 12):
+        face = struct.unpack("<3i",faceBuffer[f *12:f * 12 +12])
+        v1 = NoeVec3(tempVertices[face[1]]) - NoeVec3(tempVertices[face[0]])
+        v2 = NoeVec3(tempVertices[face[2]]) - NoeVec3(tempVertices[face[0]])
+        norm = v1.cross(v2)
+        dot0 = norm.dot(NoeVec3(tempNormals[face[0]]))
+        dot1 = norm.dot(NoeVec3(tempNormals[face[1]]))
+        dot2 = norm.dot(NoeVec3(tempNormals[face[2]]))
+        tempFace.append((face[0],face[1], face[2]))
+        if dot0 < 0.0 and dot1 < 0.0  and dot2 < 0.0:
+            tempFace[f] = (tempFace[f][0],tempFace[f][2],tempFace[f][1])
+        tempFaceBuffer += struct.pack("<3i",tempFace[f][0],tempFace[f][1],tempFace[f][2])
+    return tempFaceBuffer
+
+
 def getMKPS2VertexBoneIDs(flagData,MKMaterialUsedBoneIDList,hanimSkinBoneIDList,skinPlgBoneMap,useBonePalette):
     numBlock = len(flagData)
     boneIDsList = []
@@ -1464,14 +1455,15 @@ def getMKPS2VertexBoneIDs(flagData,MKMaterialUsedBoneIDList,hanimSkinBoneIDList,
         for i in range(len(MKMaterialUsedBoneIDList)):
             bonePalette.append(hanimSkinBoneIDList[MKMaterialUsedBoneIDList[i]])
     else:               # npc mesh
-        bonePalette = hanimSkinBoneIDList   
+        bonePalette = hanimSkinBoneIDList
     for i in range(numBlock):
         boneIDs = bytes()
         numVert = len(flagData[i]) // 12
-        for j in range(numVert):            
-            boneID1 = flagData[i][j*12+0]
-            boneID2 = flagData[i][j*12+4]
-            boneID3 = flagData[i][j*12+8]
+        bs = NoeBitStream(flagData[i])
+        for j in range(numVert):
+            boneID1 = bs.readUInt() & 0x3FF
+            boneID2 = bs.readUInt() & 0x3FF
+            boneID3 = bs.readUInt() & 0x3FF
             if boneID1 > 0:
                 boneID1 = boneID1 // 4 - 1
                 boneID1 = bonePalette[boneID1]
@@ -1479,12 +1471,12 @@ def getMKPS2VertexBoneIDs(flagData,MKMaterialUsedBoneIDList,hanimSkinBoneIDList,
                 boneID2 = boneID2 // 4 - 1
                 boneID2 = bonePalette[boneID2]
             if boneID3 > 0:
-                boneID3 = boneID3 // 4 - 1  
+                boneID3 = boneID3 // 4 - 1
                 boneID3 = bonePalette[boneID3]
-            boneIDs += noePack('3B',boneID1,boneID2,boneID3)    
+            boneIDs += noePack('3B',boneID1,boneID2,boneID3)
         boneIDsList.append(boneIDs)
-    return boneIDsList                          
-def getMKPS2VertexWeights(flagData):      
+    return boneIDsList
+def getMKPS2VertexWeights(flagData):
     numBlock = len(flagData) // 2
 
     weightsList = []
@@ -1493,30 +1485,18 @@ def getMKPS2VertexWeights(flagData):
     for i in range(numBlock):
         bin1 = NoeBitStream(flagData[i*2])
         bin2 = NoeBitStream(flagData[i*2+1])
-        boneIDs = bytes()
         weights = bytes()
         numVert = len(flagData[i*2]) // 2
         
         for j in range(numVert):
-            weight1 = bin1.readUByte()
-            boneID1 = bin1.readUByte() 
-            weight2 = bin2.readUByte()
-            boneID2 = bin2.readUByte()
-
-            if (boneID1 + boneID2) == 16:
-                if boneID1 == 16:                         
-                    weights += noePack('3f',1.0,0,0)
-                elif boneID2 == 16:                    
-                    weights += noePack('3f',0,1.0,0)
-                else:                          
-                    weights += noePack('3f',boneID1/16,boneID2/16,0)
-            elif (boneID1 + boneID2) == 15:
-
-                weights += noePack('3f',boneID1/15,boneID2/15,0)
-            elif (boneID1 + boneID2) < 15:
-                       
-                weights += noePack('3f',boneID1/15,boneID2/15,(15-boneID1-boneID2)/15)
-
+            w1 = bin1.readShort()
+            w2 = bin2.readShort()
+            weight1 = w1 / 4096.0
+            weight2 = w2 / 4096.0
+            weight3 = 0.0
+            if (w1 + w2) < 4095:
+                weight3 = 1.0 - weight1 - weight2
+            weights += struct.pack('3f', weight1, weight2, weight3)
         weightsList.append(weights)
     return weightsList
             
@@ -1627,26 +1607,21 @@ def getsharedVertexIDListMapMesh(flagData,mapVertIdInterval):
             curStripVertexIDList.append(vertID)
             skipList2.append(skipFlag)     
         vertStorageIDList.append(value&0x7fff)
-    #print("Shared ID LIST:")
-    #print(vertStorageIDList)
-    #print(prevStripVertexIDList)   
-    #print(curStripVertexIDList)
-    
-    return [prevStripVertexIDList,curStripVertexIDList,skipList1,skipList2]  
+    return [prevStripVertexIDList,curStripVertexIDList,skipList1,skipList2]
 def getVertexIDListMapMesh(flagData):
     vin = NoeBitStream(flagData)
-    numVerts = len(flagData) // 2  
+    numVerts = len(flagData) // 2
     vertIDList = []
     unkFlagList = []
     skipFlagList = []
-    
+
     maxVertID = 0 
     vertStorageIDList = []
     test = []
-    for i in range (numVerts): 
+    for i in range (numVerts):
         value = vin.readUShort()
-        unkFlag = value & 0x3    
-        skipFlag = (value & 0x8000) == 0x8000              
+        unkFlag = value & 0x3
+        skipFlag = (value & 0x8000) == 0x8000
         unkFlagList.append(unkFlag)
         skipFlagList.append(skipFlag)
         vertStorageIDList.append(value&0x7fff)
@@ -1654,26 +1629,22 @@ def getVertexIDListMapMesh(flagData):
 
     test.sort()
     intervalList = []
-    for i in range (numVerts): 
+    for i in range (numVerts):
         if i > 0:
-            intervalValue = test[i] - test[i-1] 
+            intervalValue = test[i] - test[i-1]
             intervalList.append(intervalValue)
     intervalList.sort()
-    #print(intervalList)
-    #print("ID LIST:")
-    #print(test) 
-
     firstID = vertStorageIDList[0]
     secondID = vertStorageIDList[1]
     interval = intervalList[0]
 
     # Base index values
-    # MKD 193-5 671-5 
+    # MKD 193-5 671-5
     # MKA 201-5 679-5
     # MKD 1-3
-    # MKA 147-3 622-3 
+    # MKA 147-3 622-3
     # MKA MKD 238-3 723-3
-    for i in range (numVerts): 
+    for i in range (numVerts):
         value = vertStorageIDList[i]
         if  (interval % 3) == 0:
             if value < 622 and value >= 1:
@@ -1684,7 +1655,6 @@ def getVertexIDListMapMesh(flagData):
                         vertID = (value - 1) // 3
                 elif value % 3 == 0 :
                     vertID = (value - 147) // 3
-               
             elif value >= 622:
                 if (value - 622) % 3 > 0:
                     vertID = (value - 723) // 3
@@ -1704,21 +1674,19 @@ def getVertexIDListMapMesh(flagData):
         vertIDList.append(vertID)
         if maxVertID < vertID:
             maxVertID = vertID
-    vertStorageIDList.sort()       
-    #print("v count: ",len(vertIDList),numVerts)
-    #print("v List:",vertIDList)
-    return [vertIDList,unkFlagList,skipFlagList,maxVertID,vertStorageIDList,interval]    
-def createTriList(skipList):   
+    vertStorageIDList.sort()
+    return [vertIDList,unkFlagList,skipFlagList,maxVertID,vertStorageIDList,interval]
+def createTriList(skipList):
     out = NoeBitStream()
     numVerts = len(skipList)
     startDir = -1
     faceDir = startDir
     f1 = 0
     f2 = 1
-    for i in range (numVerts):        
+    for i in range (numVerts):
         f3 = i
         skipFlag = skipList[i] #skip Isolated vertex
-        faceDir *= -1 
+        faceDir *= -1
         if skipFlag != True:
             if faceDir > 0:
                 out.writeInt(f1)
@@ -1727,10 +1695,10 @@ def createTriList(skipList):
             else:
                 out.writeInt(f2)
                 out.writeInt(f1)
-                out.writeInt(f3)            
+                out.writeInt(f3)
         f1 = f2
-        f2 = f3         
-    return out.getBuffer()  
+        f2 = f3
+    return out.getBuffer()
 def createTriListNoUVMesh(flagData,usedBoneIDList):
     vin = NoeBitStream(flagData)
     out = NoeBitStream()
@@ -1793,8 +1761,12 @@ def getTransformVertex(vertBuffer,parentBoneMatrix):
     out = NoeBitStream()
     numVerts = len(vertBuffer) // 12
     for i in range(numVerts):
-        vert = NoeVec3.fromBytes(vin.readBytes(12))
-        vert *= parentBoneMatrix        
+        vx = vin.readUInt() & 0xFFFFFC00
+        vy = vin.readUInt() & 0xFFFFFC00
+        vz = vin.readUInt() & 0xFFFFFC00
+        temp_bytes = struct.pack("<3I",vx,vy,vz)
+        vert = NoeVec3.fromBytes(temp_bytes)
+        vert *= parentBoneMatrix
         out.writeBytes(vert.toBytes())
     return out.getBuffer()
 def getUV(uvdata):
@@ -1806,15 +1778,18 @@ def getUV(uvdata):
         v = uvin.readShort() / 4096.0
         out.writeFloat(u)
         out.writeFloat(v)
-    return out.getBuffer()  
-def getTransformNormal(normalData,parentBoneMatrix):
+    return out.getBuffer()
+def getTransformNormal(normalData,parentBoneMatrix:NoeMat43):
     nin = NoeBitStream(normalData)
     out = NoeBitStream()
     numVerts = len(normalData) // 12
+    RotMatrix = parentBoneMatrix.toQuat().toMat43().inverse().transpose()
+    #print(tempMat)
     for i in range(numVerts):
         normal = NoeVec3.fromBytes(nin.readBytes(12))
-        normal *= parentBoneMatrix
+        normal *= RotMatrix
         normal.normalize()
+        # print(i,normal)
         out.writeBytes(normal.toBytes())
     return out.getBuffer()
     
@@ -1823,26 +1798,26 @@ def getNormal(normalData):
     out = NoeBitStream()
     numVerts = len(normalData) // 3
     for i in range(numVerts):
-        nx = nin.readByte() / 128.0
-        ny = nin.readByte() / 128.0
-        nz = nin.readByte() / 128.0
+        nx = nin.readByte() / 127.0
+        ny = nin.readByte() / 127.0
+        nz = nin.readByte() / 127.0
         out.writeFloat(nx)
         out.writeFloat(ny)
-        out.writeFloat(nz)        
+        out.writeFloat(nz)
     return out.getBuffer()
 
 class decodeVTypePSP(object):
     def __init__(self,VTYPE:int):
         self.UVFormat = VTYPE & 3
-        self.ColorFormat = (VTYPE >> 2) & 7 
+        self.ColorFormat = (VTYPE >> 2) & 7
         self.NormalFormat = (VTYPE >> 5) & 3
         self.PositionFormat = (VTYPE >> 7) & 3
         self.WeightFormat = (VTYPE >> 9) & 3
         self.IndexFormat = (VTYPE >> 11) & 3
         self.numWeights = ((VTYPE >> 14) & 7) + 1 # Number of weights (Skinning)
         self.numVertices =((VTYPE >> 18) & 7) + 1 # Number of vertices (Morphing)
-        self.coordType = (VTYPE >> 23) & 1 # Bypass Transform Pipeline. 1 -Transformed Coordinates . 0-Raw Coordinates.
-        
+        self.coordType = (VTYPE >> 23) & 1  # Bypass Transform Pipeline. \
+                                            # 1 -Transformed Coordinates . 0-Raw Coordinates.
 
 class rMKPSPNativeDataPLG(object):
     def __init__(self,bs:NoeBitStream,matList,binMeshPLG:rBinMeshPLG,vertMat,skinFlag,hSkinBoneIDList,sphereXYZ,skin):
@@ -1851,7 +1826,7 @@ class rMKPSPNativeDataPLG(object):
         self.matList = matList
         self.matIdList = binMeshPLG.matIdList
         self.matIdNumFaceList = binMeshPLG.matIdNumFaceList
-        self.vertMat = vertMat  
+        self.vertMat = vertMat
         self.skinFlag = skinFlag
         self.hSkinBoneIDList = hSkinBoneIDList
         self.posOffset = sphereXYZ
@@ -1978,7 +1953,7 @@ class rMKPSPNativeDataPLG(object):
             
             matID = self.matIdList[i]
             matName = self.matList[matID].name
-            rapi.rpgSetMaterial(matName)     
+            rapi.rpgSetMaterial(matName)
             '''        
             matName = "mtl" + str(i)
             rapi.rpgSetName(matName)
@@ -2021,7 +1996,8 @@ class rGeomtry(object):
             if geoStruct.version < 0x34000:
                 self.bs.seek(12,NOESEEK_REL) #skip surfaceProperties
             if Prelit == 1:
-                self.bs.seek(numVert*4,1)
+                colors = self.bs.readBytes(numVert * 4)
+                rapi.rpgBindColorBuffer(colors, noesis.RPGEODATA_UBYTE, 4, 4)
             if Textured == 1:
                 uvs = self.bs.readBytes(numVert * 8)
                 rapi.rpgBindUV1Buffer(uvs, noesis.RPGEODATA_FLOAT, 8)
@@ -2081,8 +2057,8 @@ class rGeomtry(object):
                     if geoStruct.version >= 0x34000:self.bs.seek(padl6Len2, NOESEEK_REL)
                 if positionFlag and m > 0:
                     rapi.rpgCommitMorphFrame(numVert)
-        if numMorphTargets:
-            rapi.rpgCommitMorphFrameSet()
+        #if numMorphTargets > 1:
+        #    rapi.rpgCommitMorphFrameSet()
 
         matrialListHeader = rwChunk(self.bs)
         matDatas = self.bs.readBytes(matrialListHeader.chunkSize)
@@ -2192,7 +2168,7 @@ class rGeomtry(object):
                     skinPlgBoneMap = skin.usedBoneIndexList
                 skinPlgEndOffset = self.bs.tell()
                 self.bs.seek(nativeChunkStartOffset)                        
-                #natvieDatas = self.bs.readBytes(nativeChunkSize)      
+                #natvieDatas = self.bs.readBytes(nativeChunkSize)
                 MKPS2NativeDataPLG = rMKPS2NativeDataPLG(self.bs,matList,\
                     binMeshPLG,self.vertMat,rMatList.MKMaterialSkinBonePalette,\
                     MKSkinFlag,self.hSkinBoneIDList,rMatList.useBonePalette,\
